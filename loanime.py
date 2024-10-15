@@ -52,6 +52,9 @@ def scrap(series_id, lang):
                 continue
             print(f'WARNING: Unknown track kind "{track["kind"]}"!', file=sys.stderr)
 
+        if metadata['encrypted']:
+            print('WARNING: Video streams are encrypted, decryption is not supported :(', file=sys.stderr)
+            continue
         if len(metadata['sources']) != 1:
             print('WARNING: Wrong number of sources!', file=sys.stderr)
         check_call(['ffmpeg', '-i', metadata['sources'][0]['file'], '-c', 'copy', '-f', 'mp4', f'{basename}.mp4.part'], stdout=DEVNULL, stderr=DEVNULL)
