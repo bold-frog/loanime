@@ -68,7 +68,7 @@ def scrap(series_id, lang, get_metadata):
         if len(metadata['sources']) != 1:
             print('WARNING: Wrong number of sources!', file=sys.stderr)
         url = metadata['sources'][0].get('url') or metadata['sources'][0]['file']
-        check_call(['ffmpeg', '-i', url, '-c', 'copy', '-f', 'mp4', f'{basename}.mp4.part'], stdout=DEVNULL, stderr=DEVNULL)
+        check_call(['ffmpeg', '-y', '-i', url, '-c', 'copy', '-f', 'mp4', f'{basename}.mp4.part'], stdout=DEVNULL, stderr=DEVNULL)
 
         if any([
             metadata['intro']['start'] > metadata['intro']['end'],
