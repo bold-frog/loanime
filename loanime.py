@@ -29,7 +29,7 @@ def get_metadata_parse(series_id, episode_id, lang):
 
 
 def get_metadata_script(script, series_id, episode_id, lang):
-    return json.loads(check_output([script, series_id, episode_id, lang], encoding='utf-8'))
+    return json.loads(check_output([script, str(series_id), str(episode_id), lang], encoding='utf-8'))
 
 
 def scrap(series_id, lang, get_metadata):
@@ -62,12 +62,13 @@ def scrap(series_id, lang, get_metadata):
                 continue
             print(f'WARNING: Unknown track kind "{track["kind"]}"!', file=sys.stderr)
 
-        if metadata['encrypted']:
+        if metadata.get('encrypted', False):
             print('WARNING: Video streams are encrypted, decryption is not supported :(', file=sys.stderr)
             continue
         if len(metadata['sources']) != 1:
             print('WARNING: Wrong number of sources!', file=sys.stderr)
-        check_call(['ffmpeg', '-i', metadata['sources'][0]['file'], '-c', 'copy', '-f', 'mp4', f'{basename}.mp4.part'], stdout=DEVNULL, stderr=DEVNULL)
+        url = metadata['sources'][0].get('url') or metadata['sources'][0]['file']
+        check_call(['ffmpeg', '-i', url, '-c', 'copy', '-f', 'mp4', f'{basename}.mp4.part'], stdout=DEVNULL, stderr=DEVNULL)
 
         if any([
             metadata['intro']['start'] > metadata['intro']['end'],

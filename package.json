@@ -1,0 +1,15 @@
+{
+  "name": "loanime",
+  "version": "1.0.0",
+  "description": "Parse hianime.to metadata",
+  "type": "module",
+  "main": "metadata.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "aniwatch": "^2.4.1"
+  }
+}
