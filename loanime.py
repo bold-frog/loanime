@@ -2,6 +2,7 @@
 
 import sys
 import requests
+import json
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse
 from pathlib import Path
@@ -16,7 +17,22 @@ def video_duration(filename):
     return float(check_output(['ffprobe', '-v', 'error', '-show_entries', 'format=duration', '-of', 'default=noprint_wrappers=1:nokey=1', filename], encoding='utf-8'))
 
 
-def scrap(series_id, lang):
+def get_metadata_parse(series_id, episode_id, lang):
+    episode_html = soup(requests.get(f'https://hianime.to/ajax/v2/episode/servers?episodeId={episode_id}').json()['html'])
+    media_id = int(episode_html.select_one(f'div.server-item[data-type="{lang}"]')['data-id'])
+
+    media_link = requests.get(f'https://hianime.to/ajax/v2/episode/sources?id={media_id}').json()['link']
+    megacloud_id = urlparse(media_link).path.split('/')[-1]
+
+    metadata = requests.get(f'https://megacloud.tv/embed-2/ajax/e-1/getSources?id={megacloud_id}').json()
+    return metadata
+
+
+def get_metadata_script(script, series_id, episode_id, lang):
+    return json.loads(check_output([script, series_id, episode_id, lang], encoding='utf-8'))
+
+
+def scrap(series_id, lang, get_metadata):
     series_html = soup(requests.get(f'https://hianime.to/ajax/v2/episode/list/{series_id}').json()['html'])
     for episode_node in series_html.select('div.ss-list a.ep-item'):
         episode_num = int(episode_node['data-number'])
@@ -32,13 +48,7 @@ def scrap(series_id, lang):
             continue
         print(f'Downloading "{basename}"', file=sys.stderr)
 
-        episode_html = soup(requests.get(f'https://hianime.to/ajax/v2/episode/servers?episodeId={episode_id}').json()['html'])
-        media_id = int(episode_html.select_one(f'div.server-item[data-type="{lang}"]')['data-id'])
-
-        media_link = requests.get(f'https://hianime.to/ajax/v2/episode/sources?id={media_id}').json()['link']
-        megacloud_id = urlparse(media_link).path.split('/')[-1]
-
-        metadata = requests.get(f'https://megacloud.tv/embed-2/ajax/e-1/getSources?id={megacloud_id}').json()
+        metadata = get_metadata(series_id, episode_id, lang)
 
         for track in metadata['tracks']:
             if track['kind'] == 'thumbnails':
@@ -98,4 +108,7 @@ if __name__ == '__main__':
         print(f'usage: {sys.argv[0]} <series_id> eng|jap')
         sys.exit(1)
 
-    scrap(series_id, lang)
+    if len(sys.argv) <= 3:
+        scrap(series_id, lang, get_metadata_parse)
+    else:
+        scrap(series_id, lang, lambda series_id, episode_id, lang: get_metadata_script(sys.argv[3], series_id, episode_id, lang))
