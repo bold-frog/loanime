@@ -10,6 +10,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "aniwatch": "^2.4.1"
+    "aniwatch": "^2.18.1"
   }
 }
